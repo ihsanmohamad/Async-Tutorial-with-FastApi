@@ -57,25 +57,32 @@ CityIn_Pydantic = pydantic_model_creator(City, name='CityIn', exclude_readonly=T
 
 
 async def get_all_time(obj):
-    async with httpx.AsyncClient() as client:
-        r = await client.get(f'http://worldtimeapi.org/api/timezone/{obj}')
-    timezone = r.json()['timezone']
-    current_time = r.json()['datetime']
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f'http://worldtimeapi.org/api/timezone/{obj}')
+        print(r.json())
+        timezone = r.json()['timezone']
+        current_time = r.json()['datetime']
 
-    return {"timezone" : timezone, "current_time": current_time}
-        
+        return {"timezone" : timezone, "current_time": current_time}
+    except:
+        pass
+
 @app.get('/')
 async def index():
-    async with httpx.AsyncClient() as client:
-        r = await client.get(f'http://worldtimeapi.org/api/timezone')
-    timezone_data = r.json()
-    
-    tasks = []
-    for timezone in timezone_data:
-        task = asyncio.create_task(get_all_time(timezone))
-        tasks.append(task)
-    return await asyncio.gather(*tasks)
-
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f'http://worldtimeapi.org/api/timezone')
+        timezone_data = r.json()
+            
+        tasks = []
+        for timezone in timezone_data:
+            task = asyncio.create_task(get_all_time(timezone))
+            tasks.append(task)
+        return await asyncio.gather(*tasks)
+        
+    except:
+        return {"detail": "Unknown Error"}
 
 @app.get('/cities')
 async def get_cities():
@@ -85,6 +92,7 @@ async def get_cities():
     for city in cities:
         task = asyncio.create_task(City.get_current_time(city))
         tasks.append(task)
+        print(city)   
     await asyncio.gather(*tasks)
     
     return cities
@@ -93,7 +101,7 @@ async def get_cities():
 @app.get('/city/{city_name}')
 async def get_city(city_name: str):
     city = await City_Pydantic.from_queryset_single(City.get(name=city_name))
-    city_obj = await City.get_current_time(city)
+    # city_obj = await City.get_current_time(city)
     city_data = jsonable_encoder(city)
 
     print(city_data['name'])
