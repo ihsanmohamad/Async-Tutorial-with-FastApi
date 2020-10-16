@@ -1,4 +1,4 @@
-from fastapi import FastAPI , HTTPException, status, Depends, Query
+from fastapi import FastAPI 
 from fastapi.encoders import jsonable_encoder
 
 from pydantic import BaseModel
@@ -6,7 +6,6 @@ from pydantic import BaseModel
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.contrib.fastapi import register_tortoise
 
-from datetime import datetime
 
 from tortoise import fields
 from tortoise.models import Model
